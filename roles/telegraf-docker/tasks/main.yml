@@ -1,0 +1,46 @@
+- name: Create telegraf config directory
+  file:
+    path: /etc/telegraf/telegraf.d
+    state: directory
+    mode: 0750
+  notify: restart telegraf
+
+- name: Telegraf configuration
+  template:
+    src: config.j2
+    dest: /etc/telegraf/telegraf.conf
+    owner: root
+    group: root
+    mode: 0640
+  notify: restart telegraf
+
+- name: Telegraf TLS certificate
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/telegraf/tls.key
+    - /etc/telegraf/tls.crt
+
+- name: Telegraf container
+  docker_container:
+    name: telegraf
+    # https://hub.docker.com/r/library/telegraf/tags/
+    image: telegraf:1.7.3
+    state: started
+    restart_policy: unless-stopped
+    env:
+      HOST_ETC: /rootfs/etc
+      HOST_PROC: /rootfs/proc
+      HOST_SYS: /rootfs/sys
+    security_opts:
+      - apparmor=unconfined
+    ports:
+      - "8080:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/telegraf:/etc/telegraf:ro
+      - /etc:/rootfs/etc:ro
+      - /proc:/rootfs/proc:ro
+      - /sys:/rootfs/sys:ro
+    command: --config-directory /etc/telegraf/telegraf.d/

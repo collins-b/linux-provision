@@ -1,0 +1,286 @@
+[global_tags]
+
+[agent]
+  ## Default data collection interval for all inputs
+  interval = "10s"
+  ## Rounds collection interval to 'interval'
+  ## ie, if interval="10s" then always collect on :00, :10, :20, etc.
+  round_interval = true
+
+  ## Telegraf will send metrics to outputs in batches of at most
+  ## metric_batch_size metrics.
+  ## This controls the size of writes that Telegraf sends to output plugins.
+  metric_batch_size = 1000
+
+  ## For failed writes, telegraf will cache metric_buffer_limit metrics for each
+  ## output, and will flush this buffer on a successful write. Oldest metrics
+  ## are dropped first when this buffer fills.
+  ## This buffer only fills when writes fail to output plugin(s).
+  metric_buffer_limit = 10000
+
+  ## Collection jitter is used to jitter the collection by a random amount.
+  ## Each plugin will sleep for a random time within jitter before collecting.
+  ## This can be used to avoid many plugins querying things like sysfs at the
+  ## same time, which can have a measurable effect on the system.
+  collection_jitter = "0s"
+
+  ## Default flushing interval for all outputs. You shouldn't set this below
+  ## interval. Maximum flush_interval will be flush_interval + flush_jitter
+  flush_interval = "10s"
+  ## Jitter the flush interval by a random amount. This is primarily to avoid
+  ## large write spikes for users running a large number of telegraf instances.
+  ## ie, a jitter of 5s and interval 10s means flushes will happen every 10-15s
+  flush_jitter = "0s"
+
+  ## By default or when set to "0s", precision will be set to the same
+  ## timestamp order as the collection interval, with the maximum being 1s.
+  ##   ie, when interval = "10s", precision will be "1s"
+  ##       when interval = "250ms", precision will be "1ms"
+  ## Precision will NOT be used for service inputs. It is up to each individual
+  ## service input to set the timestamp at the appropriate precision.
+  ## Valid time units are "ns", "us" (or "µs"), "ms", "s".
+  precision = ""
+
+  ## Logging configuration:
+  ## Run telegraf with debug log messages.
+  debug = false
+  ## Run telegraf in quiet mode (error log messages only).
+  quiet = false
+  ## Specify the log file name. The empty string means to log to stderr.
+  logfile = ""
+
+  ## Override default hostname, if empty use os.Hostname()
+  hostname = ""
+  ## If set to true, do no set the "host" tag in the telegraf agent.
+  omit_hostname = false
+
+[[outputs.prometheus_client]]
+  listen = ":80"
+
+{% if telegraf_username | default(false) %}
+  basic_username = "{{ telegraf_username }}"
+  basic_password = "{{ telegraf_password }}"
+{% endif %}
+
+  ## Interval to expire metrics and not deliver to prometheus, 0 == no expiration
+  # expiration_interval = "60s"
+
+  ## Collectors to enable, valid entries are "gocollector" and "process".
+  ## If unset, both are enabled.
+  collectors_exclude = []
+
+  # Send string metrics as Prometheus labels.
+  # Unless set to false all string metrics will be sent as labels.
+  string_as_label = true
+
+#   ## Interval to expire metrics and not deliver to prometheus, 0 == no expiration
+#   # expiration_interval = "60s"
+
+###############################################################################
+#                            INPUT PLUGINS                                    #
+###############################################################################
+
+# Read metrics about cpu usage
+[[inputs.cpu]]
+  ## Whether to report per-cpu stats or not
+  percpu = true
+  ## Whether to report total system cpu stats or not
+  totalcpu = true
+  ## If true, collect raw CPU time metrics.
+  collect_cpu_time = false
+  ## If true, compute and report the sum of all non-idle CPU states.
+  report_active = false
+
+# Read metrics about disk usage by mount point
+[[inputs.disk]]
+  ## By default, telegraf gather stats for all mountpoints.
+  ## Setting mountpoints will restrict the stats to the specified mountpoints.
+  mount_points = ["/"]
+
+  ## Ignore some mountpoints by filesystem type. For example (dev)tmpfs (usually
+  ## present on /run, /var/run, /dev/shm or /dev).
+  #ignore_fs = ["tmpfs", "devtmpfs", "devfs"]
+
+# Read metrics about disk IO by device
+[[inputs.diskio]]
+  ## By default, telegraf will gather stats for all devices including
+  ## disk partitions.
+  ## Setting devices will restrict the stats to the specified devices.
+  # devices = ["sda", "sdb"]
+  ## Uncomment the following line if you need disk serial numbers.
+  # skip_serial_number = false
+  #
+  ## On systems which support it, device metadata can be added in the form of
+  ## tags.
+  ## Currently only Linux is supported via udev properties. You can view
+  ## available properties for a device by running:
+  ## 'udevadm info -q property -n /dev/sda'
+  # device_tags = ["ID_FS_TYPE", "ID_FS_USAGE"]
+  #
+  ## Using the same metadata source as device_tags, you can also customize the
+  ## name of the device via templates.
+  ## The 'name_templates' parameter is a list of templates to try and apply to
+  ## the device. The template may contain variables in the form of '$PROPERTY' or
+  ## '${PROPERTY}'. The first template which does not contain any variables not
+  ## present for the device is used as the device name tag.
+  ## The typical use case is for LVM volumes, to get the VG/LV name instead of
+  ## the near-meaningless DM-0 name.
+  # name_templates = ["$ID_FS_LABEL","$DM_VG_NAME/$DM_LV_NAME"]
+
+# Get kernel statistics from /proc/stat
+[[inputs.kernel]]
+  # no configuration
+
+# Read metrics about memory usage
+[[inputs.mem]]
+  # no configuration
+
+# Get the number of processes and group them by status
+[[inputs.processes]]
+  # no configuration
+
+# Read metrics about swap memory usage
+[[inputs.swap]]
+  # no configuration
+
+# Read metrics about system load & uptime
+[[inputs.system]]
+  # no configuration
+
+# Collects conntrack stats from the configured directories and files.
+[[inputs.conntrack]]
+   ## The following defaults would work with multiple versions of conntrack.
+   ## Note the nf_ and ip_ filename prefixes are mutually exclusive across
+   ## kernel versions, as are the directory locations.
+
+   ## Superset of filenames to look for within the conntrack dirs.
+   ## Missing files will be ignored.
+   files = ["ip_conntrack_count","ip_conntrack_max",
+            "nf_conntrack_count","nf_conntrack_max"]
+
+   ## Directories to search within for the conntrack files above.
+   ## Missing directrories will be ignored.
+   dirs = ["/proc/sys/net/ipv4/netfilter","/proc/sys/net/netfilter"]
+
+# Read metrics about docker containers
+[[inputs.docker]]
+  ## Docker Endpoint
+  ##   To use TCP, set endpoint = "tcp://[ip]:[port]"
+  ##   To use environment variables (ie, docker-machine), set endpoint = "ENV"
+  endpoint = "unix:///var/run/docker.sock"
+  ## Only collect metrics for these containers, collect all if empty
+ 
+  ## Set to true to collect Swarm metrics(desired_replicas, running_replicas)
+  gather_services = false
+
+  ## Only collect metrics for these containers, collect all if empty
+  container_names = []
+
+  ## Timeout for docker list, info, and stats commands
+  timeout = "5s"
+
+  ## Whether to report for each container per-device blkio (8:0, 8:1...) and
+  ## network (eth0, eth1, ...) stats or not
+  perdevice = true
+  ## Whether to report for each container total blkio and network stats or not
+  total = false
+
+  ## docker labels to include and exclude as tags.  Globs accepted.
+  ## Note that an empty array for both will include all labels as tags
+  docker_label_include = []
+  docker_label_exclude = []
+
+  ## Container states to include and exclude. Globs accepted.
+  ## When empty only containers in the "running" state will be captured.
+  container_state_include = ["*"]
+  # container_state_exclude = []
+
+# Read stats about given file(s)
+[[inputs.filestat]]
+  ## Files to gather stats about.
+  ## These accept standard unix glob matching rules, but with the addition of
+  ## ** as a "super asterisk". ie:
+  ##   "/var/log/**.log"  -> recursively find all .log files in /var/log
+  ##   "/var/log/*/*.log" -> find all .log files with a parent dir in /var/log
+  ##   "/var/log/apache.log" -> just tail the apache log file
+  ##
+  ## See https://github.com/gobwas/glob for more examples
+  ##
+  files = ["/var/log/**.log"]
+  ## If true, read the entire file and calculate an md5 checksum.
+  md5 = false
+
+# Collect statistics about itself
+[[inputs.internal]]
+  ## If true, collect telegraf memory stats.
+  collect_memstats = true
+
+
+# This plugin gathers interrupts data from /proc/interrupts and /proc/softirqs.
+[[inputs.interrupts]]
+  ## To filter which IRQs to collect, make use of tagpass / tagdrop, i.e.
+  [inputs.interrupts.tagdrop]
+    irq = [ "NET_RX", "TASKLET" ]
+
+# # Gather packets and bytes counters from Linux ipsets
+# [[inputs.ipset]]
+#   ## By default, we only show sets which have already matched at least 1 packet.
+#   ## set include_unmatched_sets = true to gather them all.
+#   include_unmatched_sets = false
+#   ## Adjust your sudo settings appropriately if using this option ("sudo ipset save")
+#   use_sudo = false
+#   ## The default timeout of 1s for ipset execution can be overridden here:
+#   # timeout = "1s"
+
+# # Gather packets and bytes throughput from iptables
+# [[inputs.iptables]]
+#   ## iptables require root access on most systems.
+#   ## Setting 'use_sudo' to true will make use of sudo to run iptables.
+#   ## Users must configure sudo to allow telegraf user to run iptables with no password.
+#   ## iptables can be restricted to only list command "iptables -nvL".
+#   use_sudo = false
+#   ## Setting 'use_lock' to true runs iptables with the "-w" option.
+#   ## Adjust your sudo settings appropriately if using this option ("iptables -wnvl")
+#   use_lock = false
+#   ## defines the table to monitor:
+#   table = "filter"
+#   ## defines the chains to monitor.
+#   ## NOTE: iptables rules without a comment will not be monitored.
+#   ## Read the plugin documentation for more information.
+#   chains = [ "INPUT" ]
+
+# Get kernel statistics from /proc/vmstat
+[[inputs.kernel_vmstat]]
+  # no configuration
+
+
+# Provides Linux sysctl fs metrics
+[[inputs.linux_sysctl_fs]]
+  # no configuration
+
+# Read metrics about network interface usage
+[[inputs.net]]
+  ## By default, telegraf gathers stats from any up interface (excluding loopback)
+  ## Setting interfaces will tell it to gather these explicit interfaces,
+  ## regardless of status.
+  ##
+  # interfaces = [""]
+
+# Read TCP metrics such as established, time wait and sockets counts.
+[[inputs.netstat]]
+  # no configuration
+
+# Collect kernel snmp counters and network interface statistics
+[[inputs.nstat]]
+  ## file paths for proc files. If empty default paths will be used:
+  ##    /proc/net/netstat, /proc/net/snmp, /proc/net/snmp6
+  ## These can also be overridden with env variables, see README.
+  proc_net_netstat = "/proc/net/netstat"
+  proc_net_snmp = "/proc/net/snmp"
+  proc_net_snmp6 = "/proc/net/snmp6"
+  ## dump metrics with 0 values too
+  dump_zeros       = true
+
+# Monitor process cpu and memory usage
+[[inputs.procstat]]
+  exe = "telegraf"

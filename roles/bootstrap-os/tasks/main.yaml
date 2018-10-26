@@ -1,0 +1,17 @@
+---
+- name: Bootstrap | Check if bootstrap is needed
+  raw: which "{{ item }}"
+  register: need_bootstrap
+  failed_when: false
+  changed_when: false
+  with_items:
+    - python
+  tags:
+    - facts
+
+- name: Bootstrap | Install python 2.7
+  raw:
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y python-minimal python-apt
+  when:
+    " need_bootstrap.results | map(attribute='rc') | sort | last | bool "

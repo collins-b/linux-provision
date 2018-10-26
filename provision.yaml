@@ -1,0 +1,12 @@
+---
+- hosts: "{{ server }}"
+  gather_facts: no
+  become: yes
+  roles:
+    - bootstrap-os
+
+- hosts: "{{ server }}"
+  gather_facts: yes
+  roles:
+    - common
+  become: true

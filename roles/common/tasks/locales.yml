@@ -1,0 +1,10 @@
+- name: Install locales
+  apt:
+    name: locales
+    state: present
+    install_recommends: no
+
+- name: Set up locale to en_US.UTF-8
+  locale_gen:
+    name: en_US.UTF-8
+    state: present

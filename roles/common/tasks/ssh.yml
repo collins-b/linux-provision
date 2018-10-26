@@ -1,0 +1,32 @@
+- name: Install SSH server and client
+  apt:
+    name: "{{ item }}"
+    state: present
+    autoremove: yes
+    install_recommends: no
+  with_items:
+    - openssh-client
+    - openssh-server
+  notify: restart ssh
+
+- name: Set ssh root authorized keys
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ item }}"
+  with_file:
+    - public_keys/*.pub
+
+- name: Disable ssh root login with password
+  lineinfile: 
+    dest: /etc/ssh/sshd_config
+    regexp: ^PermitRootLogin
+    line: PermitRootLogin without-password
+    state: present
+  notify: restart ssh
+
+- name: SSH service
+  service:
+    name:  ssh
+    state: started
+    enabled: yes

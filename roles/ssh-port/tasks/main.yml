@@ -1,0 +1,6 @@
+- name: Setup alternate SSH port
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: "^Port"
+    line: "Port {{ new_ssh_port }}"
+  notify: restart ssh

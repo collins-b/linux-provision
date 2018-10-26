@@ -1,0 +1,22 @@
+- name: Systemd package
+  apt:
+    name: systemd
+    state: present
+    autoremove: yes
+  notify: restart timesyncd
+
+- name: Timesyncd configuration
+  template:
+    src: timesyncd/timesyncd.conf.j2
+    dest: /etc/systemd/timesyncd.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart timesyncd
+
+- name: Timesyncd service
+  service:
+    name: systemd-timesyncd
+    state: started
+    enabled: yes
+  

@@ -1,0 +1,19 @@
+---
+
+# - name: APT Packages
+#   include: packages.yml
+
+# - name: System
+#   include: system.yml
+
+# - name: Tmpreaper
+#   include: tmpreaper.yml
+
+# - name: System timesync
+#   include: timesync.yml
+
+# - name: SSH server
+#   include: ssh.yml
+
+- name: Logrotate
+  include: logrotate.yml

@@ -1,0 +1,104 @@
+- name: Update all packages to the latest version
+  apt:
+    upgrade: dist
+    autoremove: yes
+    update_cache: yes
+    cache_valid_time: 604800
+
+- name: Install base packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    autoremove: yes
+    install_recommends: no
+  with_items:
+    - apt-transport-https
+    - rsync
+    - tar
+    - xz-utils
+    - vim
+    - screen
+    - tmux
+    - mtr-tiny
+    - tshark
+    - htop
+    - iftop
+    - iotop
+    - nmap
+    - tcpdump
+    - telnet
+    - ca-certificates
+    - python-jmespath
+    - logrotate
+    - locales
+    - git
+  become: true
+
+- name: Remove unnecessary packages
+  apt:
+    name: "{{ item }}"
+    state: absent
+    purge: yes
+  notify: clean packages
+  with_items:
+    - apparmor
+    - ubuntu-standard
+    - ubuntu-server
+    - installation-report
+    - cloud-guest-utils
+    - cloud-initramfs-copymods
+    - cloud-initramfs-dyn-netconf
+    - ubuntu-cloudimage-keyring
+    - open-vm-tools
+    - grub-legacy-ec2
+    - command-not-found
+    - python3-commandnotfound
+    - command-not-found-data
+    - info
+    - nano
+    - popularity-contest
+    - sosreport
+    - snapd
+    - at
+    - ftp
+    - bcache-tools
+    - distro-info-data
+    - fonts-ubuntu-font-family-console
+    - ifenslave
+    - friendly-recovery
+    - python3-gdbm
+    - laptop-detect
+    - tasksel
+    - tasksel-data
+    - apport
+    - apport-symptoms
+    - python3-apport
+    - os-prober
+    - parted
+    - install-info
+    - pastebinit
+    - vim-tiny
+    # unused block devices
+    - open-iscsi
+    - overlayroot
+    - lvm2
+    - liblvm2app2.2
+    - mdadm
+    - dmsetup
+    - dmeventd
+    - cryptsetup
+    - cryptsetup-bin
+    # unused fs
+    - xfsprogs
+    - btrfs-tools
+    - squashfs-tools
+    - ntfs-3g
+    # account service
+    - accountsservice
+    # lxc
+    - lxc-common
+    - lxcfs
+    - lxd
+    - lxd-client
+    # polkit
+    - policykit-1

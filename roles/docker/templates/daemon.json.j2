@@ -1,0 +1,13 @@
+{
+{% if gelf_server | default(false) %}
+  "log-driver": "gelf",
+  "log-opts": {
+    "gelf-address": "udp://{{ gelf_server }}:12201"
+  }{% if local_ip | default(false) %},{% endif %}
+{% endif %}
+
+{% if ipv6_tunnel | default(false) %} 
+  "ipv6": true,
+  "fixed-cidr-v6": "{{ ipv6_tunnel }}/64"
+{% endif %}
+}

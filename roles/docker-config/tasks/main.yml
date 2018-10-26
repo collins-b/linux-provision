@@ -1,0 +1,24 @@
+---
+- set_fact:
+    docker_config_dir: "/root/.docker"
+  when: docker_config_user == "root"
+
+- set_fact:
+    docker_config_dir: "/home/{{ docker_config_user }}/.docker"
+  when: docker_config_user != "root"
+
+- name: user Docker configuration dir
+  file:
+    path: "{{ docker_config_dir }}"
+    state: directory
+    owner: "{{ docker_config_user }}"
+    group: "{{ docker_config_user }}"
+    mode: 700
+
+- name: user Docker configuration
+  template:
+    src: docker-config.json.j2
+    dest: "{{ docker_config_dir }}/config.json"
+    owner: "{{ docker_config_user }}"
+    group: "{{ docker_config_user }}"
+    mode: 600

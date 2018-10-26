@@ -1,0 +1,8 @@
+auto he-ipv6
+iface he-ipv6 inet6 v4tunnel
+    address {{ ipv6_tunnel }}2
+    netmask 64
+    endpoint {{ ipv6_tunnel_endpoint }}
+    local {{ ansible_host | default(ansible_host) }}
+    ttl 255
+    gateway {{ ipv6_tunnel }}1

@@ -1,0 +1,6 @@
+minio_client_download_url: https://dl.minio.io/client/mc/release/linux-amd64/mc
+minio_client_bin: /usr/local/bin/mc
+version: 9
+minio_server_url:
+access_key:
+secret_key:

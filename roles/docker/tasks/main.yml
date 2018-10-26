@@ -1,0 +1,66 @@
+---
+- name: Make sure required packages exist
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+    - software-properties-common
+
+- name: Make sure pip is installed
+  apt:
+    name: python-pip
+    state: present
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Get ubuntu distribution name
+  command: lsb_release -cs
+  register: distribution
+
+- name: Add Docker APT repo
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ distribution.stdout }} stable"
+    state: present
+
+- name: Install Docker
+  apt:
+    name: docker-ce
+    state: present
+    update_cache: yes
+    cache_valid_time: 86400
+  notify: enable and restart docker
+
+- name: Install docker-compose
+  pip:
+    name: docker-compose
+    state: present
+    version: 1.22.0
+
+- name: Copy ssh keys to host
+  copy:
+    src: "{{ item }}"
+    dest: "/root/.ssh/{{ item }}"
+    owner: root
+    group: root
+    mode: 0600
+  with_items:
+    - id_rsa
+    - id_rsa.pub
+
+- name: Set vm.max_map_count to 262144 in sysctl
+  sysctl: name={{ item.key }} value={{ item.value }}
+  with_items:
+    - { key: "vm.max_map_count", value: "262144" }
+
+- name: Set gelf logging driver
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: 600

@@ -1,0 +1,14 @@
+---
+- name: Down interface IPv6
+  command: ifdown he-ipv6
+  ignore_errors: yes
+  listen: reload he-ipv6
+
+- name: Unload SIT
+  command: rmmod sit
+  ignore_errors: yes
+  listen: reload he-ipv6
+
+- name: UP interface IPv6
+  command: ifup he-ipv6
+  listen: reload he-ipv6

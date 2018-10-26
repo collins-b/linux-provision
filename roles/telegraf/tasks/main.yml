@@ -1,0 +1,41 @@
+- name: Add InfluxData APT Repository to keyring
+  apt_key:
+    id: 2582E0C5
+    url: https://repos.influxdata.com/influxdb.key
+    state: present
+
+- name: Add InfluxData APT Repository
+  apt_repository:
+    repo: deb https://repos.influxdata.com/ubuntu xenial stable
+    state: present
+    filename: influxdata
+
+- name: Telegraf package
+  apt:
+    name: telegraf
+    state: present
+    autoremove: yes
+  notify: restart telegraf
+
+- name: Telegraf configuration
+  copy: 
+    src: config
+    dest: /etc/telegraf/telegraf.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart telegraf
+
+- name: Telegraf service
+  service:
+    name:  telegraf
+    state: started
+    enabled: yes
+
+- name: Create include directory
+  file:
+    path: /etc/telegraf/telegraf.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0755

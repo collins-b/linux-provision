@@ -1,0 +1,16 @@
+- name: Set hostname if it is not an IP address
+  hostname:
+    name: "{{ inventory_hostname }}"
+  when: not inventory_hostname is match('(\d{1,3}\.){3}\d{1,3}')
+
+- name: Set root filesystem to noatime
+  mount:
+    path: /
+    src: "UUID={{ ansible_mounts | json_query('[?mount == `/`] | [0].uuid') }}"
+    fstype: ext4
+    opts: noatime
+    state: present
+
+- name: Set timezone to UTC
+  timezone:
+    name: Etc/UTC
